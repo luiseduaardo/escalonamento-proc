@@ -134,7 +134,7 @@ class ProcessScheduler(ABC):
                 self.__current_switch_time = 0
 
         # se o processo atual terminou, retire ele
-        if self.current_process.is_finished():
+        if self.current_process and self.current_process.is_finished():
             self.current_process = None
             self.context_switching = True
         
