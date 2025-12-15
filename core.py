@@ -89,9 +89,6 @@ class ProcessScheduler(ABC):
         """
         Método chamado toda vez que o tempo da simulação do escalonador avança, APÓS todos os processos atualizarem.
 
-        Aqui você pode atualizar o valor de self.current_process sem atualizar seu estado,
-        uma vez que tick detecta se este método causou uma mudança
-
         A implementação deve ser decidida pelo escalonador concreto.
         """
 
