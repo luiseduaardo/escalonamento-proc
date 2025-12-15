@@ -1,15 +1,4 @@
 from abc import ABC, abstractmethod
-from enum import Enum
-
-class ProcessState(Enum):
-    """
-    Enum simples dos estados possíveis para um processo.
-    """
-
-    NOT_READY = 0,
-    READY = 1,
-    EXECUTING = 2,
-    FINISHED = 3
 
 class Process:
     """
@@ -21,44 +10,27 @@ class Process:
         self.priority = priority
         self.creation_time = creation_time
         self.cpu_time = cpu_time
+        
+        self.executing = False
+        self.time_spent_creating = 0
+        self.time_spent_executing = 0
 
-        # estado interno
-        self.__state: ProcessState = ProcessState.NOT_READY
-        self.__time_spent_creating = 0
-        self.__time_spent_executing = 0
+    def is_created(self) -> bool:
+        return self.time_spent_creating == self.creation_time
 
-    def start_executing(self) -> None:
-        if self.is_ready():
-            self.__state = ProcessState.EXECUTING
-
-    def stop_executing(self) -> None:
-        if self.__state == ProcessState.EXECUTING:
-            self.__state = ProcessState.READY
-
-    def is_ready(self) -> bool:
-        return self.__state == ProcessState.READY
-    
     def is_finished(self) -> bool:
-        return self.__state == ProcessState.FINISHED
+        return self.time_spent_executing == self.creation_time
 
-    def update(self, time_elapsed: int = 1) -> None:
-        """
-        Avança o tempo no contexto do processo.
+    def tick_create(self) -> None:
+        assert not self.is_created()
 
-        Aqui é onde o estado do processo é atualizado.
-        """
+        self.time_spent_creating += 1
 
-        if self.__state == ProcessState.NOT_READY:
-            self.__time_spent_creating += time_elapsed
-            
-            if self.__time_spent_creating >= self.creation_time:
-                self.__state = ProcessState.READY
-        elif self.__state == ProcessState.EXECUTING:
-            self.__time_spent_executing += time_elapsed
+    def tick_execute(self) -> None:
+        assert self.executing and not self.is_finished()
 
-            if self.__time_spent_executing >= self.cpu_time:
-                self.__state = ProcessState.FINISHED
-        # se o processo estiver READY ou FINISHED, não faça nada
+        self.time_spent_executing += 1
+        
 
 class ProcessScheduler(ABC):
     """
@@ -72,10 +44,21 @@ class ProcessScheduler(ABC):
 
         self.context_switch_time: int = ctx_switch_time
         self.context_switching: bool = False
-        self.__current_switch_time: int = 0
+        self.current_switch_time: int = 0
 
         self.current_process: Process = None
         self.time: int = 0
+
+    def add_process(self, process: Process) -> None:
+        """
+        Adiciona um processo novo ao escalonador.
+        
+        Cria um AssertionError em caso do processo não estar em condições para ser escalonado (não está pronto).
+        """
+
+        assert process.is_created()
+
+        self.processes.update(process.pid, process)
     
     @abstractmethod
     def choose_process(self) -> Process | None:
@@ -104,9 +87,7 @@ class ProcessScheduler(ABC):
         """
 
         self.current_process = self.choose_process()
-
-        if self.current_process:
-            self.current_process.start_executing()
+        ...
         
     def tick(self) -> None:
         """
@@ -121,21 +102,21 @@ class ProcessScheduler(ABC):
         if not self.current_process and not self.context_switching:
             self.get_new_process()
         
-        # deixa todos os processos atualizarem/executarem
-        for proc in self.processes:
-            proc.update()
+        self.current_process.tick_execute()
 
         # tratando tempo de mudança de contexto
         if self.context_switching:
             self.__current_switch_time += 1
 
-            if self.__current_switch_time == self.context_switch_time:
+            if self.current_switch_time == self.context_switch_time:
                 self.context_switching = False
-                self.__current_switch_time = 0
+                self.current_switch_time = 0
 
         # se o processo atual terminou, retire ele
         if self.current_process and self.current_process.is_finished():
+            self.processes.pop(self.current_process.pid)
             self.current_process = None
+            
             self.context_switching = True
         
         self.on_tick()
