@@ -32,7 +32,8 @@ class Process:
             self.__state = ProcessState.EXECUTING
 
     def stop_executing(self) -> None:
-        self.__state = ProcessState.READY
+        if self.__state == ProcessState.EXECUTING:
+            self.__state = ProcessState.READY
 
     def is_ready(self) -> bool:
         return self.__state == ProcessState.READY
@@ -66,12 +67,15 @@ class ProcessScheduler(ABC):
     """
 
     def __init__(self, ctx_switch_time: int, processes: list[Process] = []):
-        self.context_switch_time = ctx_switch_time
         self.processes: dict[int, Process] = { proc.pid: proc for proc in processes }
-        self.process_count = len(processes)
+        self.process_count: int = len(processes)
 
-        self.current_process = None
-        self.time = 0
+        self.context_switch_time: int = ctx_switch_time
+        self.context_switching: bool = False
+        self.__current_switch_time: int = 0
+
+        self.current_process: Process = None
+        self.time: int = 0
     
     @abstractmethod
     def choose_process(self) -> Process | None:
@@ -114,16 +118,25 @@ class ProcessScheduler(ABC):
         """
 
         # se nenhum processo estiver ativo, escalone um processo
-        if not self.current_process:
-            self.current_process = self.get_new_process()
+        if not self.current_process and not self.context_switching:
+            self.get_new_process()
         
         # deixa todos os processos atualizarem/executarem
         for proc in self.processes:
             proc.update()
-        
+
+        # tratando tempo de mudança de contexto
+        if self.context_switching:
+            self.__current_switch_time += 1
+
+            if self.__current_switch_time == self.context_switch_time:
+                self.context_switching = False
+                self.__current_switch_time = 0
+
         # se o processo atual terminou, retire ele
         if self.current_process.is_finished():
             self.current_process = None
+            self.context_switching = True
         
         self.on_tick()
         self.time += 1
