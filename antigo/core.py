@@ -102,7 +102,8 @@ class ProcessScheduler(ABC):
         if not self.current_process and not self.context_switching:
             self.get_new_process()
         
-        self.current_process.tick_execute()
+        if self.current_process:
+            self.current_process.tick_execute()
 
         # tratando tempo de mudança de contexto
         if self.context_switching:
