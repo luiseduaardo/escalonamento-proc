@@ -9,8 +9,5 @@ class Process:
         self.creation_time = creation_time
         self.cpu_time = cpu_time
         
-        self.start_time = -1
+        self.execution_time = 0
         self.finish_time = 0
-
-    def clone(self):
-        return Process(self.id, self.priority, self.creation_time, self.cpu_time)
