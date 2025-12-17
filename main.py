@@ -29,6 +29,7 @@ def read_file(filename):
     return quantum, ctx_switch_t, process_list
 
 def print_info(scheduler: ProcessScheduler):
+    print("----- TIMELINE -----")
     print(scheduler.timeline)
 
     average = 0
