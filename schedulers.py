@@ -18,10 +18,11 @@ class RoundRobinScheduler(ProcessScheduler):
         if self.quantum_timer == self.quantum and self.current_process["execution_timer"] < self.current_process["cpu_time"]:
             self.quantum_timer = 0
             
-            self.ready_processes.append(self.current_process)
-            self.current_process = None
-            self.context_switch_counter += 1
-            self.context_switching = True
+            if self.ready_processes:
+                self.ready_processes.append(self.current_process)
+                self.current_process = None
+                self.context_switch_counter += 1
+                self.context_switching = True
 
     def next_process(self) -> dict | None:
         if len(self.ready_processes) == 0:
