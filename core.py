@@ -19,6 +19,7 @@ class ProcessScheduler(ABC):
         self.ready_processes = []
         self.current_process = None
 
+        self.return_times = []
         self.processes_finished = 0
         self.initial_proc_count = len(process_data)
 
@@ -56,6 +57,7 @@ class ProcessScheduler(ABC):
 
             if self.current_process and self.current_process["execution_timer"] == self.current_process["cpu_time"]:
                 self.processes_finished += 1
+                self.return_times.append(self.total_time - self.current_process["arrival_time"])
 
                 self.current_process = None
                 self.context_switching = True
@@ -64,12 +66,16 @@ class ProcessScheduler(ABC):
                     break
 
             if self.context_switching:
-                self.switch_timer += 1
-                self.overhead_time += 1
+                if self.context_switch_time > 0:
+                    self.switch_timer += 1
+                    self.overhead_time += 1
 
-                self.end_tick()
+                    self.end_tick()
 
-                if self.switch_timer == self.context_switch_time:
+                    if self.switch_timer == self.context_switch_time:
+                        self.switch_timer = 0
+                        self.context_switching = False
+                else:
                     self.switch_timer = 0
                     self.context_switching = False
 
@@ -89,7 +95,6 @@ class ProcessScheduler(ABC):
                 self.end_tick()
 
     def end_tick(self):
-        self.post_tick()
         self.total_time += 1
 
         # linha do tempo
