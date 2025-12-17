@@ -1,9 +1,10 @@
+import sys
 from schedulers import RoundRobinScheduler, PriorityScheduler
 from core import ProcessScheduler
 from io_utils import read_file, save_file
 
 def main():
-    input_file, output_file = "test/EntradaProcessos.txt", "test/teste.txt"
+    input_file, output_file = sys.argv[1], sys.argv[2]
 
     quantum, ctx_switch_t, proc_list = read_file(input_file)
 
