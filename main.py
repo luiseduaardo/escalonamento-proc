@@ -4,7 +4,7 @@ from core import ProcessScheduler
 from io_utils import read_file, save_file
 
 def main():
-    input_file, output_file = sys.argv[1], sys.argv[2]
+    input_file, output_file = "test/inputs/"+sys.argv[1], "test/saida_obtida/"+sys.argv[2]
 
     quantum, ctx_switch_t, proc_list = read_file(input_file)
 
