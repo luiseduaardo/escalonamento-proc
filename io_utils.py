@@ -58,6 +58,8 @@ def save_file(file_obj: str, algo_name: str, scheduler: ProcessScheduler):
     average /= len(scheduler.return_times)
 
     file_obj.write(f"\n\nTempo médio de retorno: {average}")
-    file_obj.write(f"\nTempo total: {scheduler.total_time - scheduler.overhead_time}")
+    file_obj.write(f"\nTempo total de simulação: {scheduler.total_time}")
+    file_obj.write(f"\nTempo executando processos: {scheduler.total_time - scheduler.overhead_time}")
+    file_obj.write(f"\nTempo chaveando contexto: {scheduler.overhead_time}")
     file_obj.write(f"\nNúmero de chaveamentos: {scheduler.context_switch_counter}")
     file_obj.write(f"\nOverhead: {(scheduler.overhead_time / scheduler.total_time)*100:.2f}%")
