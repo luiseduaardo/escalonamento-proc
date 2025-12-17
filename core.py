@@ -61,14 +61,36 @@ class ProcessScheduler(ABC):
 
     def queue_current_process(self) -> None:
         """
-        Retorna o processo atual para a lista de processos prontos.
+        Retorna o processo atual para a lista de processos prontos e começa o chaveamento de contexto.
         """
 
         self.ready_processes.append(self.current_process)
+
         self.current_process = None
+        self.start_context_switch()
+
+    def remove_current_process(self):
+        """
+        Remove o processo atual sem retorná-lo à lista de processos prontos e começa o chaveamento de contexto.
+
+        Esse método só deve ser chamado quando o processo atual realizou seu trabalho.
+        """
+
+        assert self.current_process_finished()
+
+        self.processes_finished += 1
+        self.return_times.append(self.total_time - self.current_process["arrival_time"])
+
+        self.current_process = None
+        if len(self.ready_processes) > 0:
+            self.start_context_switch()
+            # se não houver processos prontos mais, não devemos chavear contexto
 
     def current_process_finished(self) -> bool:
         return self.current_process and self.current_process["execution_timer"] == self.current_process["cpu_time"]
+    
+    def simulation_finished(self) -> bool:
+        return self.processes_finished == self.initial_proc_count
 
     @abstractmethod
     def on_tick(self) -> None:
@@ -101,20 +123,12 @@ class ProcessScheduler(ABC):
         Inicia a simulação usando o escalonador.
         """
 
-        while self.processes_finished < self.initial_proc_count:
+        while not self.simulation_finished():
             self.create_processes()
             self.on_tick()
 
             if self.current_process_finished():
-                self.processes_finished += 1
-                self.return_times.append(self.total_time - self.current_process["arrival_time"])
-
-                self.current_process = None
-
-                if self.processes_finished == self.initial_proc_count:
-                    break
-
-                self.start_context_switch()
+                self.remove_current_process()
 
             if self.context_switching:
                 if self.context_switch_time > 0:
@@ -143,10 +157,12 @@ class ProcessScheduler(ABC):
                 self.current_process["execution_timer"] += 1
                 self.end_tick()
 
-    def end_tick(self):
-        self.total_time += 1
+    def end_tick(self) -> None:
+        if not self.simulation_finished():
+            self.total_time += 1
+            self.write_to_timeline()
 
-        # linha do tempo
+    def write_to_timeline(self) -> None:
         if self.context_switching:
             self.timeline += "E"
         elif self.current_process:

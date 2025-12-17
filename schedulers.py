@@ -15,12 +15,11 @@ class RoundRobinScheduler(ProcessScheduler):
 
         self.quantum_timer += 1
 
-        if self.quantum_timer == self.quantum and self.current_process["execution_timer"] < self.current_process["cpu_time"]:
+        if self.quantum_timer == self.quantum and not self.current_process_finished():
             self.quantum_timer = 0
             
-            if self.ready_processes:
+            if len(self.ready_processes) > 0:
                 self.queue_current_process()
-                self.start_context_switch()
 
     def next_process(self) -> dict | None:
         if len(self.ready_processes) == 0:
@@ -37,15 +36,15 @@ class PriorityScheduler(ProcessScheduler):
         self.ordering_function = lambda p : (p["priority"], p["pid"])
 
     def on_tick(self) -> None:
-        if len(self.ready_processes) == 0:
+        if len(self.ready_processes) == 0 or self.current_process is None:
             return
 
         max_proc = max(self.ready_processes, key=self.ordering_function)
+        max_proc_is_more_important = min(max_proc, self.current_process, key=self.ordering_function) == max_proc
 
         # se tiver algum processo com prioridade maior/PID menor que o processo atual, pegue um processo novo 
-        if self.current_process and min(max_proc, self.current_process, key=self.ordering_function) == max_proc:
+        if max_proc_is_more_important:
             self.queue_current_process()
-            self.start_context_switch()
 
     def next_process(self) -> dict | None:
         if len(self.ready_processes) == 0:
