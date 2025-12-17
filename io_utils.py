@@ -1,6 +1,6 @@
 from core import *
 
-def read_file(filename):
+def read_file(filename: str):
     input = []
 
     with open(filename, "r") as file:
@@ -27,14 +27,14 @@ def read_file(filename):
     
     return quantum, ctx_switch_t, process_list
 
-def format_timeline(timeline_str):
-    if not timeline_str: return ""
+def format_timeline(timeline: str):
+    if not timeline: return ""
     
     formatted = []
-    current_char = timeline_str[0]
+    current_char = timeline[0]
     start = 0
     
-    for i, char in enumerate(timeline_str):
+    for i, char in enumerate(timeline):
         if char != current_char:
             label = "Escalonador" if current_char == "E" else (f"Processo {current_char}" if current_char != "." else "Ocioso")
             formatted.append(f"[{start}-{i}] {label}")
@@ -42,7 +42,7 @@ def format_timeline(timeline_str):
             start = i
             
     label = "Escalonador" if current_char == "E" else (f"Processo {current_char}" if current_char != "." else "Ocioso")
-    formatted.append(f"[{start}-{len(timeline_str)}] {label}")
+    formatted.append(f"[{start}-{len(timeline)}] {label}")
     
     return "\n".join(formatted)
 
@@ -60,4 +60,4 @@ def save_file(file_obj: str, algo_name: str, scheduler: ProcessScheduler):
     file_obj.write(f"\n\nTempo médio de retorno: {average}")
     file_obj.write(f"\nTempo total: {scheduler.total_time - scheduler.overhead_time}")
     file_obj.write(f"\nNúmero de chaveamentos: {scheduler.context_switch_counter}")
-    file_obj.write(f"\nOverhead: {(scheduler.overhead_time / scheduler.total_time):.4f}")
+    file_obj.write(f"\nOverhead: {(scheduler.overhead_time / scheduler.total_time)*100:.2f}%")
