@@ -60,10 +60,12 @@ class ProcessScheduler(ABC):
                 self.return_times.append(self.total_time - self.current_process["arrival_time"])
 
                 self.current_process = None
-                self.context_switching = True
 
                 if self.processes_finished == self.initial_proc_count:
                     break
+
+                self.context_switch_counter += 1
+                self.context_switching = True
 
             if self.context_switching:
                 if self.context_switch_time > 0:
