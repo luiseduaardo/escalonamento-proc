@@ -34,6 +34,11 @@ class ProcessScheduler(ABC):
         self.timeline = ""
 
     def create_processes(self):
+        """
+        Verifica se algum processo novo chegou/foi criado e 
+        adiciona ele ao final da lista de processos prontos.
+        """
+
         for data in self.procs_to_create:
             if self.total_time >= data["arrival_time"]:
                 new_proc = data
@@ -42,20 +47,65 @@ class ProcessScheduler(ABC):
                 self.ready_processes.append(new_proc)
                 self.procs_to_create.remove(data)
 
+    def start_context_switch(self) -> None:
+        assert not self.context_switching
+
+        self.context_switch_counter += 1
+        self.context_switching = True
+
+    def stop_context_switch(self) -> None:
+        assert self.context_switching
+
+        self.switch_timer = 0
+        self.context_switching = False
+
+    def queue_current_process(self) -> None:
+        """
+        Retorna o processo atual para a lista de processos prontos.
+        """
+
+        self.ready_processes.append(self.current_process)
+        self.current_process = None
+
+    def current_process_finished(self) -> bool:
+        return self.current_process and self.current_process["execution_timer"] == self.current_process["cpu_time"]
+
     @abstractmethod
     def on_tick(self) -> None:
+        """
+        Método chamado toda vez que o tempo da simulação do escalonador avança.
+        
+        Mais especificamente, é chamado logo após verificar se algum processo novo chegou,
+        e antes de atualizar o processo atual ou chavear contexto.
+
+        A implementação deve ser decidida pelo escalonador concreto.
+        """
+
         pass
 
     @abstractmethod
     def next_process(self) -> dict | None:
+        """
+        Método chamado toda vez que o escalonador precisa escolher um novo processo.
+
+        Deve retornar os dados do processo que foi escolhido, ou None somente se não há
+        nenhum processo disponível.
+
+        A metodologia de escolha de processo deve ser decidida por implementações concretas.
+        """
+
         pass
 
     def start(self) -> None:
+        """
+        Inicia a simulação usando o escalonador.
+        """
+
         while self.processes_finished < self.initial_proc_count:
             self.create_processes()
             self.on_tick()
 
-            if self.current_process and self.current_process["execution_timer"] == self.current_process["cpu_time"]:
+            if self.current_process_finished():
                 self.processes_finished += 1
                 self.return_times.append(self.total_time - self.current_process["arrival_time"])
 
@@ -64,8 +114,7 @@ class ProcessScheduler(ABC):
                 if self.processes_finished == self.initial_proc_count:
                     break
 
-                self.context_switch_counter += 1
-                self.context_switching = True
+                self.start_context_switch()
 
             if self.context_switching:
                 if self.context_switch_time > 0:
@@ -75,11 +124,9 @@ class ProcessScheduler(ABC):
                     self.end_tick()
 
                     if self.switch_timer == self.context_switch_time:
-                        self.switch_timer = 0
-                        self.context_switching = False
+                        self.stop_context_switch()
                 else:
-                    self.switch_timer = 0
-                    self.context_switching = False
+                    self.stop_context_switch()
 
                 continue
 

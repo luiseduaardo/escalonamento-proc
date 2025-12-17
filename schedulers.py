@@ -19,10 +19,8 @@ class RoundRobinScheduler(ProcessScheduler):
             self.quantum_timer = 0
             
             if self.ready_processes:
-                self.ready_processes.append(self.current_process)
-                self.current_process = None
-                self.context_switch_counter += 1
-                self.context_switching = True
+                self.queue_current_process()
+                self.start_context_switch()
 
     def next_process(self) -> dict | None:
         if len(self.ready_processes) == 0:
@@ -46,10 +44,8 @@ class PriorityScheduler(ProcessScheduler):
 
         # se tiver algum processo com prioridade maior/PID menor que o processo atual, pegue um processo novo 
         if self.current_process and min(max_proc, self.current_process, key=self.ordering_function) == max_proc:
-            self.ready_processes.append(self.current_process)
-            self.current_process = None
-            self.context_switch_counter += 1
-            self.context_switching = True
+            self.queue_current_process()
+            self.start_context_switch()
 
     def next_process(self) -> dict | None:
         if len(self.ready_processes) == 0:
