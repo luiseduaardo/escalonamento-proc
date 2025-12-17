@@ -31,83 +31,28 @@ class RoundRobinScheduler(ProcessScheduler):
 
 class PriorityScheduler(ProcessScheduler):
 
+    def __init__(self, context_switch_time: int, process_data: list[dict[str, int]]):
+        super().__init__(context_switch_time, process_data)
+
+        # função ordenando por prioridade. em caso de empate, o menor PID ganha
+        self.ordering_function = lambda p : (p["priority"], p["pid"])
+
     def on_tick(self) -> None:
-        return
+        if len(self.ready_processes) == 0:
+            return
+
+        max_proc = max(self.ready_processes, key=self.ordering_function)
+
+        # se tiver algum processo com prioridade maior/PID menor que o processo atual, pegue um processo novo 
+        if self.current_process and min(max_proc, self.current_process, key=self.ordering_function) == max_proc:
+            self.ready_processes.append(self.current_process)
+            self.current_process = None
+            self.context_switch_counter += 1
+            self.context_switching = True
 
     def next_process(self) -> dict | None:
-        return None
-
-
-# testes
-
-"""
-ex = [
-    {
-        "pid": 1,
-        "priority": 1,
+        if len(self.ready_processes) == 0:
+            return self.current_process
         
-        "arrival_time": 0,
-        "cpu_time": 50
-    },
-    {
-        "pid": 2,
-        "priority": 0,
-        
-        "arrival_time": 1,
-        "cpu_time": 15
-    },
-    {
-        "pid": 3,
-        "priority": 2,
-        
-        "arrival_time": 3,
-        "cpu_time": 10
-    },
-    {
-        "pid": 4,
-        "priority": 0,
-        
-        "arrival_time": 5,
-        "cpu_time": 100
-    },
-    {
-        "pid": 5,
-        "priority": 3,
-        
-        "arrival_time": 6,
-        "cpu_time": 60
-    }
-]
-"""
-
-ex = [
-    {
-        "pid": 1,
-        "priority": 5,
-        
-        "arrival_time": 2,
-        "cpu_time": 5
-    },
-    {
-        "pid": 2,
-        "priority": 5,
-        
-        "arrival_time": 1,
-        "cpu_time": 5
-    },
-        {
-        "pid": 3,
-        "priority": 5,
-        
-        "arrival_time": 3,
-        "cpu_time": 5
-    }
-]
-
-# a = RoundRobinScheduler(1, 20, ex)
-# a = RoundRobinScheduler(2, 3, ex)
-
-# a.start()
-
-# print(f"TIMELINE: {a.timeline}")
-# assert a.timeline == ".EE222EE111EE333EE22EE11EE33"
+        self.ready_processes.sort(key=self.ordering_function)
+        return self.ready_processes.pop(0)
