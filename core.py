@@ -15,7 +15,7 @@ class ProcessScheduler(ABC):
     """
 
     def __init__(self, context_switch_time: int, process_data: list[dict[str, int]]):
-        self.procs_to_create = sorted(process_data, key = lambda p : p["pid"], reverse=True)
+        self.procs_to_create = sorted(process_data, key = lambda p : p["pid"])
         self.ready_processes = []
         self.current_process = None
 
