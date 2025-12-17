@@ -153,10 +153,9 @@ class ProcessScheduler(ABC):
                     continue
 
             # a partir daqui, tenho um processo de certeza.
-            if not self.context_switching:
-                self.current_process["execution_timer"] += 1
-                self.end_tick()
-
+            self.current_process["execution_timer"] += 1
+            self.end_tick()
+            
     def end_tick(self) -> None:
         if not self.simulation_finished():
             self.total_time += 1
