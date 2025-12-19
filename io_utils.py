@@ -27,21 +27,22 @@ def read_file(filename: str):
     
     return quantum, ctx_switch_t, process_list
 
-def format_timeline(timeline: str):
+def format_timeline(timeline: list[str]):
     if not timeline: return ""
     
     formatted = []
-    current_char = timeline[0]
+    current_str = timeline[0]
+    label = "Escalonador" if current_str == "E" else (f"Processo {current_str}" if current_str != "." else "Ocioso")
     start = 0
-    
-    for i, char in enumerate(timeline):
-        if char != current_char:
-            label = "Escalonador" if current_char == "E" else (f"Processo {current_char}" if current_char != "." else "Ocioso")
+
+    for i, s in enumerate(timeline):
+        if s != current_str:
             formatted.append(f"[{start}-{i}] {label}")
-            current_char = char
+            label = "Escalonador" if s == "E" else (f"Processo {s}" if s != "." else "Ocioso")
+            current_str = s
             start = i
             
-    label = "Escalonador" if current_char == "E" else (f"Processo {current_char}" if current_char != "." else "Ocioso")
+    label = "Escalonador" if current_str == "E" else (f"Processo {current_str}" if current_str != "." else "Ocioso")
     formatted.append(f"[{start}-{len(timeline)}] {label}")
     
     return "\n".join(formatted)
@@ -49,7 +50,10 @@ def format_timeline(timeline: str):
 def save_file(file_obj: str, algo_name: str, scheduler: ProcessScheduler):
     file_obj.write(f"------------ {algo_name} ------------")
     file_obj.write("\nLINHA DO TEMPO DE OCUPAÇÃO DA CPU: ")
-    file_obj.write(scheduler.timeline+'\n')
+    for s in scheduler.timeline:
+        file_obj.write(f"({s})")
+
+    file_obj.write("\n")
     file_obj.write(format_timeline(scheduler.timeline))
 
     average = 0
