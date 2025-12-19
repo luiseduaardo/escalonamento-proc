@@ -31,7 +31,7 @@ class ProcessScheduler(ABC):
         self.total_time = 0
         self.overhead_time = 0
         
-        self.timeline = ""
+        self.timeline = []
 
     def create_processes(self):
         """
@@ -165,8 +165,8 @@ class ProcessScheduler(ABC):
 
     def write_to_timeline(self) -> None:
         if self.context_switching:
-            self.timeline += "E"
+            self.timeline.append("E")
         elif self.current_process:
-            self.timeline += str(self.current_process["pid"])
+            self.timeline.append(str(self.current_process["pid"]))
         else:
-            self.timeline += "."
+            self.timeline.append(".")
