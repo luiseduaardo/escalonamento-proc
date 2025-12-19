@@ -39,12 +39,14 @@ class ProcessScheduler(ABC):
         adiciona ele ao final da lista de processos prontos.
         """
 
-        for data in self.procs_to_create:
-            if self.total_time >= data["arrival_time"]:
-                new_proc = data
-                new_proc["execution_timer"] = 0
+        initial_len = len(self.procs_to_create)
+        for i in range(initial_len):
+            data = self.procs_to_create[0]
 
-                self.ready_processes.append(new_proc)
+            if data["arrival_time"] >= self.total_time:
+                data["execution_timer"] = 0
+
+                self.ready_processes.append(data)
                 self.procs_to_create.remove(data)
 
     def start_context_switch(self) -> None:
