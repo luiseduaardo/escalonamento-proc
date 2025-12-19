@@ -19,5 +19,7 @@ def main():
         file.write("\n\n")
         save_file(file, "PRIORITY", priority)
 
+    print(f"Seu arquivo foi salvo em test/saida_obtida/{sys.argv[2]}.")
+
 if __name__ == "__main__":
     main()
