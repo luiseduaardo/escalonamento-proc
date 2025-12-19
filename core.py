@@ -43,7 +43,7 @@ class ProcessScheduler(ABC):
         for i in range(initial_len):
             data = self.procs_to_create[0]
 
-            if data["arrival_time"] >= self.total_time:
+            if data["arrival_time"] <= self.total_time:
                 data["execution_timer"] = 0
 
                 self.ready_processes.append(data)
