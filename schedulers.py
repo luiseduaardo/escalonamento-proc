@@ -39,11 +39,11 @@ class PriorityScheduler(ProcessScheduler):
         if len(self.ready_processes) == 0 or self.current_process is None:
             return
 
-        max_proc = max(self.ready_processes, key=self.ordering_function)
-        max_proc_is_more_important = min(max_proc, self.current_process, key=self.ordering_function) == max_proc
+        min_proc = min(self.ready_processes, key=self.ordering_function) # menor prio || menor PID (mais importante)
+        min_proc_is_more_important = min(min_proc, self.current_process, key=self.ordering_function) == min_proc
 
         # se tiver algum processo com prioridade maior/PID menor que o processo atual, pegue um processo novo 
-        if max_proc_is_more_important:
+        if min_proc_is_more_important:
             self.queue_current_process()
 
     def next_process(self) -> dict | None:
